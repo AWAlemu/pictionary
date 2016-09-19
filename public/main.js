@@ -24,6 +24,32 @@ var pictionary = function() {
     var displayGuess = function(guess) {
         guessPrint.text(guess);
     };
+    
+    var setAsDrawer = function(word) {
+        activateDrawing();
+        $('#guess').hide();
+        $('#draw').show();
+        $('#word').text(word);
+    };
+    
+    var setAsGuesser = function() {
+        canvas.off('mousemove');
+        $('#draw').hide();
+        $('#guess').show();
+    };
+    
+    var activateDrawing = function() {
+        canvas.on('mousemove', function(event) {
+            if (drawing) {
+                var offset = canvas.offset();
+                var position = {x: event.pageX - offset.left,
+                                y: event.pageY - offset.top};
+                draw(position);
+                socket.emit('draw', position);
+            }
+        });
+    };
+    
     guessPrint = $('#displayGuess');
     guessBox = $('#guess input');
     guessBox.on('keydown', onKeyDown);
@@ -40,20 +66,15 @@ var pictionary = function() {
     canvas.on('mouseup', function() {
         drawing = false;
     });
-    canvas.on('mousemove', function(event) {
-        if (drawing) {
-            var offset = canvas.offset();
-            var position = {x: event.pageX - offset.left,
-                            y: event.pageY - offset.top};
-            draw(position);
-            socket.emit('draw', position);
-        }
-    });
+    
     socket.on('draw', draw);
     socket.on('guess', displayGuess);
+    socket.on('drawer', setAsDrawer);
+    socket.on('guesser', setAsGuesser);
 };
 
 $(document).ready(function() {
     pictionary();
 });
+
 
